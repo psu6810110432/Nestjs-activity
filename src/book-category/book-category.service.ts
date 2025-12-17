@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit,NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'; 
-import { Repository } from 'typeorm';
+import { Repository, DeleteResult,UpdateResult,FindOperator  } from 'typeorm';
 import { CreateBookCategoryDto } from './dto/create-book-category.dto';
 import { UpdateBookCategoryDto } from './dto/update-book-category.dto';
 import { BookCategory } from './entities/book-category.entity';
@@ -25,23 +25,39 @@ export class BookCategoryService implements OnModuleInit {
   }
 
   
-  create(createBookCategoryDto: CreateBookCategoryDto) {
-    return this.repo.save(createBookCategoryDto);
+  async create(createDto: CreateBookCategoryDto): Promise<BookCategory> {
+    return this.repo.save(createDto);
   }
 
-  findAll() {
+  async findAll(): Promise<BookCategory[]> {
     return this.repo.find();
   }
   
-  findOne(id: number) {
-    return `This action returns a #${id} bookCategory`;
+  async findOne(id: string): Promise<BookCategory> { 
+    const category = await this.repo.findOneBy({ id: id as any });
+    if (!category) {
+      throw new NotFoundException(`Book Category with ID ${id} not found`);
+    }
+    return category;
   }
 
-  update(id: number, updateBookCategoryDto: UpdateBookCategoryDto) {
-    return `This action updates a #${id} bookCategory`;
+  async update(id: string, updateDto: UpdateBookCategoryDto): Promise<UpdateResult> {
+    const result = await this.repo.update(id, updateDto);
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Book Category with ID ${id} not found and cannot be updated`);
+    }
+    
+    return result;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} bookCategory`;
+  async remove(id: string): Promise<DeleteResult> {
+    const result = await this.repo.delete(id);
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Book Category with ID ${id} not found and cannot be deleted`);
+    }
+
+    return result;
   }
 }

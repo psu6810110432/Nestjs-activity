@@ -6,12 +6,12 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
+import { CurrentUser } from '../auth/current-user.decorator'; // ตรวจสอบว่ามี decorator นี้แล้ว
 
 @Controller('book')
 export class BookController {
   constructor(private readonly bookService: BookService) {}
 
-  // Public: Anyone can see the list of books or a specific book
   @Get()
   findAll() {
     return this.bookService.findAll();
@@ -22,13 +22,15 @@ export class BookController {
     return this.bookService.findOne(id);
   }
 
-  // Public: Users can like a book (Adjust if you want this restricted to logged-in users)
+  // --- แก้ไขจุดนี้: Toggle Like ---
+  @UseGuards(AuthGuard('jwt')) // ต้อง Login ก่อนถึงจะ Like ได้
   @Patch(':id/like')
-  likeBook(@Param('id') id: string) {
-    return this.bookService.incrementLikes(id);
+  async toggleLike(@Param('id') id: string, @CurrentUser() user: any) {
+    // user.userId มาจาก Payload ของ JWT ใน Strategy
+    return this.bookService.toggleLike(id, user.userId);
   }
 
-  // Admin Only: Creating, Updating, and Deleting books
+  // Admin Only
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
   @Post()

@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
+import { Book } from '../../book/entities/book.entity'; // ตรวจสอบ Path ให้ถูกต้อง
 
-// 1. Define the Enum
 export enum UserRole {
   USER = 'user',
   ADMIN = 'ADMIN',
@@ -18,11 +18,14 @@ export class User {
   @Column()
   password: string;
 
-  // 2. Use the Enum in the Column decorator
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.ADMIN,
+    default: UserRole.USER,
   })
   role: UserRole;
+
+  // เพิ่มความสัมพันธ์ Many-to-Many กับ Book
+  @ManyToMany(() => Book, (book) => book.likedBy)
+  likedBooks: Book[];
 }

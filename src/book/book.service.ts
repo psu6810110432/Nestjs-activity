@@ -1,46 +1,49 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Book } from './entities/book.entity';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { Book } from './entities/book.entity';
 
 @Injectable()
 export class BookService {
   constructor(
     @InjectRepository(Book)
-    private readonly bookRepository: Repository<Book>,
+    private repo: Repository<Book>,
   ) {}
+
+  // ฟีเจอร์พิเศษ: กดไลค์หนังสือ
+  async incrementLikes(id: string) {
+    const book = await this.repo.findOneBy({ id });
+    if (book) {
+      book.likeCount += 1;
+      return this.repo.save(book);
+    }
+  }
+
+  // --- CRUD มาตรฐาน ---
   create(createBookDto: CreateBookDto) {
-    return 'This action adds a new book';
+    return this.repo.save(createBookDto);
   }
 
   findAll() {
-    return `This action returns all book`;
+    return this.repo.find({ relations: ['category'] }); // ดึงข้อมูลหมวดหมู่มาโชว์ด้วย
   }
 
-  async findOne(id: string) { 
-    const book = await this.bookRepository.findOneBy({ id });
-    if (!book) {
-      throw new NotFoundException(`Book #${id} not found`);
-    }
-    return book;
-  }
-
-  update(id: number, updateBookDto: UpdateBookDto) {
-    return `This action updates a #${id} book`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} book`;
-  }
-  async incrementLikes(id: string) {
-    const result = await this.bookRepository.increment({ id }, 'likeCount', 1);
+  async findOne(id: string) {
+    return await this.repo.findOne({
+      where: { id },
+      relations: ['category'],
     
-    if (result.affected === 0) {
-      throw new NotFoundException(`Book #${id} not found`);
-    }
+    });
+    return Book;
+  }
 
-    return this.findOne(id); 
+  update(id: string, updateBookDto: UpdateBookDto) {
+    return this.repo.update(id, updateBookDto);
+  }
+
+  remove(id: string) {
+    return this.repo.delete(id);
   }
 }

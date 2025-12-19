@@ -1,18 +1,12 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm'; // เพิ่มบรรทัดนี้
 import { BookCategoryService } from './book-category.service';
 import { BookCategoryController } from './book-category.controller';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { BookCategory } from './entities/book-category.entity';
-
+import { BookCategory } from './entities/book-category.entity'; // เพิ่มบรรทัดนี้
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([BookCategory]),
-  ],
+  imports: [TypeOrmModule.forFeature([BookCategory])], // เพิ่มบรรทัดนี้ เพื่อบอกว่า Module นี้ใช้ตารางนี้นะ
   controllers: [BookCategoryController],
   providers: [BookCategoryService],
-
 })
 export class BookCategoryModule {}
-
-
